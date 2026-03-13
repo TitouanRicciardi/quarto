@@ -6,7 +6,7 @@ Nilsea HANNA et Titouan RICCIARDI*
 Nous avons choisi comme jeu le « Quarto ». Il est composé d’un
 plateau 4x4 et de 16 pions caractérisés par avec une forme
 (rond ou carré), une couleur (blanc ou noir), une profondeur
-(profond ou non) et une hauteur (petit ou grand). Le but est de
+(creux ou plein) et une taille (petit ou grand). Le but est de
 faire une ligne, une colonne ou une diagonale de 4 pions avec au
 moins un point en commun : la taille, la profondeur, la couleur ou
 la forme.
@@ -29,8 +29,8 @@ quelle pièce il va donner à l’autre.
 
 *Joseph DALY et Hector STEINMETZ--KUPP*
 
-Pour l'implémentation logicielle, nous avons choisit d'utiliser le
-langage Rust pour sa sécurité mémoire, ses performances et son
+Pour l'implémentation logicielle, nous avons choisi d'utiliser le
+langage Rust pour sa sécurité mémoire, sa performance et son
 infrastructure de tests intégrée.
 
 Nous avons utilisé un grand nombre d'optimisation, notamment de
@@ -38,12 +38,14 @@ réduction d'empreinte mémoire de toute structure utilisée. La
 vitesse de notre simulation sera primordiale pour le bon
 fonctionnement des algorithmes minimax plus tard.
 
-Une pièce est représentée par un bitfield de 4 booléens ; couleur,
-taille, creux et forme. Chaque pièce tient donc dans un entier non
-signé de 8 bits. Une pièce "vide" sera définie comme une pièce
-"impossible" en temps normal.
+Une pièce peut être représentée par 4 flags booléens, un pour chaque
+caractéristique. Nous avons donc utilisé un entier de 8 bits pour
+contenir ces flags, où les 4 premiers bits sont associés à une
+caractéristique de la pièce.
+Une pièce "vide" est définie comme une pièce "impossible" en temps
+normal (chaque bit défini à 1).
 
-Le plateau est un array de quatre array de quatre pièces. Aucune
+Le plateau est une matrice carrée de dimension 4 de pièces. Aucune
 optimisation particulière n'est nécessaire.
 
 Les pièces restantes (le "sac") est un ensemble de pièces, optimisé
@@ -57,15 +59,15 @@ Ainsi, un état de jeu complet peut être représenté comme une
 structure contenant un plateau et un sac.
 
 Pour représenter les joueurs, nous avons créé un trait "Joueur", qui
-doit définir une fonction par décision possible du joueur : choisir
-une pièce à donner à son adversaire, et placer une pièce donnée. Le
-joueur "humain" implémente ce trait en demandant le coup à jouer sur
-l'entrée standard.
+définit une fonction pour chaque décision possible du joueur :
+choisir une pièce à donner à son adversaire, et placer une pièce
+donnée. Le joueur "humain" implémente ce trait en demandant le coup
+à jouer sur l'entrée standard.
 
-On défini des fonctions pour jouer un tour de jeu, puis une
+On implémente une fonction pour jouer un tour de jeu, puis une
 fonction pour jouer le jeu entièrement avec des joueurs donnés. On
-peut donc jouer au jeu contre n'importe quel adversaire que l'on
-code.
+peut donc jouer au jeu contre n'importe quel adversaire générique
+qui implémente le trait "Joueur" pour simuler une partie.
 
 # 3 - Partie algorithmique
 
