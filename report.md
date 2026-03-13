@@ -1,5 +1,8 @@
 # 1 - Présentation du jeu
 
+*Joseph DALY, Hector STEINMETZ--KUPP,
+Nilsea HANNA et Titouan RICCIARDI*
+
 Nous avons choisi comme jeu le « Quarto ». Il est composé d’un
 plateau 4x4 et de 16 pions caractérisés par avec une forme
 (rond ou carré), une couleur (blanc ou noir), une profondeur
