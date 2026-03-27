@@ -83,6 +83,28 @@ impl Board {
 
         false
     }
+
+    pub fn is_win_global(&self) -> bool {
+        for i in 0..4 {
+            if self.is_win_axis(0, i, 1, 0) {
+                return true;
+            }
+
+            if self.is_win_axis(i, 0, 0, 1) {
+                return true;
+            }
+        }
+
+        if self.is_win_axis(0, 0, 1, 1) {
+            return true;
+        }
+
+        if self.is_win_axis(3, 0, -1, 1) {
+            return true;
+        }
+
+        false
+    }
 }
 
 impl Default for Board {
