@@ -18,6 +18,22 @@ impl Stack {
         (self.0 & bit) == bit
     }
 
+    pub fn get_all_pieces(&self) -> Vec<Piece> {
+        let mut vec = Vec::new();
+
+        for i in 0..16u8 {
+            if self.0 & (1 << i) > 0 {
+                vec.push(Piece::from(i));
+            }
+        }
+
+        vec
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0 == 0
+    }
+
     pub fn pick(&mut self, piece: Piece) -> bool {
         if !self.has(piece) {
             return false;
