@@ -79,7 +79,8 @@ Ce que nous avons fait :
 pour le comprendre et avec un petit exemple sur le quarto
 - Compréhension du code qui a été fait par nos camarades
 - Tentative de trouver une stratégie dans le jeu (peut-être : forcer
-l’autre joueur à faire un coup perdant en faisant deux lignée avec chacune un point commun)
+l’autre joueur à faire un coup perdant en faisant deux lignée avec
+chacune un point commun)
 
 Ce que nous allons faire :
 
