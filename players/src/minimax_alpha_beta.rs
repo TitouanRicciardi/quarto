@@ -1,5 +1,3 @@
-use std::arch::naked_asm;
-
 use quarto_core::{Game, Piece};
 
 use crate::Player;
@@ -56,7 +54,7 @@ impl Player for MinimaxAlphaBetaPlayer {
         for enfant in &mut noeud.enfants {
             if enfant.score == noeud.score {
                 match enfant.action_precedente {
-                    ActionPrecedente::Placement(x, y) => {
+                    ActionPrecedente::Placement(_, _) => {
                         panic!("L'action précédante d'un placement ne peut pas être un placement");
                     }
                     ActionPrecedente::Rien => {
@@ -123,11 +121,7 @@ fn create_arbre(noeud: &mut Noeud) {
 }
 
 fn inconnu_joueur(joueur: u8) -> i8 {
-    if joueur == 0 {
-        return J0INCONNU;
-    } else {
-        return J1INCONNU;
-    }
+    if joueur == 0 { J0INCONNU } else { J1INCONNU }
 }
 
 fn choix_pion(noeud: &mut Noeud) {
@@ -222,31 +216,31 @@ fn minimax(noeud: &mut Noeud) {
     if noeud.enfants.is_empty() {
         // Si on est sur une feuille => condition d'arrêt
         return;
-    } else {
+    }
+
+    for enfant in &mut noeud.enfants {
+        // On calcule le minmax de chaque enfant
+        minimax(enfant);
+    }
+    if noeud.joueur == 0 {
+        // On prend le score maximum des enfants
+        let mut max = -2; //pire cas
         for enfant in &mut noeud.enfants {
-            // On calcule le minmax de chaque enfant
-            minimax(enfant);
-        }
-        if noeud.joueur == 0 {
-            // On prend le score maximum des enfants
-            let mut max = -2; //pire cas
-            for enfant in &mut noeud.enfants {
-                //boucle simple pour trouver max
-                if enfant.score > max {
-                    max = enfant.score;
-                }
+            //boucle simple pour trouver max
+            if enfant.score > max {
+                max = enfant.score;
             }
-            noeud.score = max; //lui donner max
-        } else {
-            // On prend le score minimum des enfants
-            let mut min = 2; //meilleur cas
-            for enfant in &mut noeud.enfants {
-                //boucle simple pour trouver min
-                if enfant.score < min {
-                    min = enfant.score;
-                }
-            }
-            noeud.score = min; //lui donner min
         }
+        noeud.score = max; //lui donner max
+    } else {
+        // On prend le score minimum des enfants
+        let mut min = 2; //meilleur cas
+        for enfant in &mut noeud.enfants {
+            //boucle simple pour trouver min
+            if enfant.score < min {
+                min = enfant.score;
+            }
+        }
+        noeud.score = min; //lui donner min
     }
 }

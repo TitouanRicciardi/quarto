@@ -1,8 +1,5 @@
 use quarto_core::{Board, Game, Piece, Stack};
-use quarto_players::{
-    Player, bot_human::Human, minimax::MinimaxBot, minimax_alpha_beta::MinimaxAlphaBetaPlayer,
-    random::RandomBot,
-};
+use quarto_players::{Player, minimax_alpha_beta::MinimaxAlphaBetaPlayer, random::RandomBot};
 
 const PLAYER_COUNT: usize = 2;
 
