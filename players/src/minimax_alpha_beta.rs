@@ -14,11 +14,11 @@ enum ActionPrecedente {
 }
 
 const J0GAGNE: i8 = 2;
-const J0PERD: i8 = -2;
-const EGALITE: i8 = 0;
 const J0INCONNU: i8 = 1;
+const EGALITE: i8 = 0;
 const J1INCONNU: i8 = -1;
-const HAUTEUR: u8 = 5;
+const J0PERD: i8 = -2;
+const HAUTEUR: u8 = 6;
 
 struct Noeud {
     enfants: Vec<Noeud>,                 // Vecteur d'enfants
@@ -42,13 +42,11 @@ impl Player for MinimaxAlphaBetaPlayer {
             jeu: game.clone(),
             action: Action::Choix,
             action_precedente: ActionPrecedente::Rien, //aucune action avant la racine
-            score: J0INCONNU,                          //initialisation
+            score: -100,                               //initialisation
             hauteur: 0,
         };
 
-        create_arbre(&mut noeud); //création de l'arbre
-
-        minimax(&mut noeud); //remplir les scores
+        create_arbre(&mut noeud, -100, 100); //création de l'arbre
 
         //Récupérer l'action précédente de l'enfant qui a le même score (min ou max)
         for enfant in &mut noeud.enfants {
@@ -66,7 +64,11 @@ impl Player for MinimaxAlphaBetaPlayer {
                 }
             }
         }
-        panic!("La boucle s'est terminée");
+        panic!(
+            "La boucle s'est terminée, nb enfants : {}, score noeud {}",
+            noeud.enfants.len(),
+            noeud.score
+        );
     }
 
     fn play_piece(
@@ -81,13 +83,11 @@ impl Player for MinimaxAlphaBetaPlayer {
             jeu: game.clone(),
             action: Action::Placement(given_piece), //placement de la piece en entrée
             action_precedente: ActionPrecedente::Rien, //aucune avant la racine
-            score: J0INCONNU,                       //initialisation
+            score: -100,                            //initialisation
             hauteur: 0,
         };
 
-        create_arbre(&mut noeud); //création de l'arbre
-
-        minimax(&mut noeud); //remplir les scores
+        create_arbre(&mut noeud, -100, 100); //création de l'arbre
 
         //Récupérer l'action précédente de l'enfant qui a le même score (min ou max)
         for enfant in &mut noeud.enfants {
@@ -109,13 +109,13 @@ impl Player for MinimaxAlphaBetaPlayer {
     }
 }
 
-fn create_arbre(noeud: &mut Noeud) {
+fn create_arbre(noeud: &mut Noeud, alpha: i8, beta: i8) {
     match noeud.action {
         Action::Choix => {
-            choix_pion(noeud);
+            choix_pion(noeud, alpha, beta);
         }
         Action::Placement(piece) => {
-            placer_pion(noeud, piece);
+            placer_pion(noeud, piece, alpha, beta);
         }
     }
 }
@@ -124,7 +124,8 @@ fn inconnu_joueur(joueur: u8) -> i8 {
     if joueur == 0 { J0INCONNU } else { J1INCONNU }
 }
 
-fn choix_pion(noeud: &mut Noeud) {
+fn choix_pion(noeud: &mut Noeud, alpha: i8, beta: i8) {
+    let mut has_children = false;
     for piece in noeud.jeu.stack.get_all_pieces() {
         //pour chaque pièce du sac
 
@@ -142,9 +143,31 @@ fn choix_pion(noeud: &mut Noeud) {
         };
 
         if noeud_enfant.hauteur < HAUTEUR {
-            create_arbre(&mut noeud_enfant);
+            // pas d'élagage quand on passe d'un joueur au même joueur
+            create_arbre(&mut noeud_enfant, -100, 100);
         }
-        noeud.enfants.push(noeud_enfant); //ajout de l'enfant dans le vecteur enfants
+
+        //score dynamique
+        if !has_children {
+            //si on est premier enfant
+            has_children = true;
+            noeud.score = noeud_enfant.score //score parent prends temporairement score enfant
+        } else if noeud.joueur == 0 {
+            //max pour joueur 0
+            noeud.score = noeud.score.max(noeud_enfant.score);
+        } else {
+            //min pour joueur 1
+            noeud.score = noeud.score.min(noeud_enfant.score);
+        }
+        if noeud.hauteur == 0 {
+            //il n'y a que la racine qui a besoin de garder ses enfants en mémoire
+            noeud.enfants.push(noeud_enfant); // dans tous les cas, rajout de l'enfant
+        }
+
+        if noeud.score < alpha || noeud.score > beta {
+            //élagage
+            return;
+        }
     }
 }
 
@@ -155,16 +178,13 @@ Score gagnant:
 -gagant = 0 si match nul
 -gagant = -2 si pas fini
     */
-fn placer_pion(noeud: &mut Noeud, piece: Piece) {
+fn placer_pion(noeud: &mut Noeud, piece: Piece, alpha: i8, beta: i8) {
+    let mut has_children = false;
     for x in 0..4 {
         for y in 0..4 {
             if noeud.jeu.board.get_piece(x, y).is_none() {
-                /*
-                if let ActionPrecedente::Rien = noeud.action_precedente {
-                    println!("Essai des coordonnées {}, {}", x, y)
-                }
-                */
                 //si placement (x,y) vide
+                //
 
                 let mut nouveau_jeu = noeud.jeu.clone();
                 nouveau_jeu.board.set_piece(x, y, Some(piece)); //placer la pièce
@@ -200,47 +220,36 @@ fn placer_pion(noeud: &mut Noeud, piece: Piece) {
                 if noeud_enfant.score == J0INCONNU || noeud_enfant.score == J1INCONNU {
                     //si jeu pas fini, continuer l'arbre
                     if noeud_enfant.hauteur < HAUTEUR {
-                        create_arbre(&mut noeud_enfant);
+                        if noeud.joueur == 0 {
+                            //max
+                            create_arbre(&mut noeud_enfant, noeud.score, 100); //beta
+                        } else {
+                            //min
+                            create_arbre(&mut noeud_enfant, -100, noeud.score); //alpha
+                        }
                     }
                 }
-                noeud.enfants.push(noeud_enfant); // dans tous les cas, rajout de l'enfant
-            }
-        }
-    }
-}
+                if !has_children {
+                    //si on est premier enfant
+                    has_children = true;
+                    noeud.score = noeud_enfant.score //score parent prends temporairement score enfant
+                } else if noeud.joueur == 0 {
+                    //max
+                    noeud.score = noeud.score.max(noeud_enfant.score); //beta
+                } else {
+                    //min
+                    noeud.score = noeud.score.min(noeud_enfant.score); //alpha
+                }
+                if noeud.hauteur == 0 {
+                    //il n'y a que la racine qui a besoin de garder ses enfants en mémoire
+                    noeud.enfants.push(noeud_enfant); // dans tous les cas, rajout de l'enfant
+                }
 
-/*récupérer score des enfants, sachant que les feuilles ont déjà leurs scores inscrits. Récupération des scores en fonction
-de quel joueur joue: si J1 joue alors on prends max du score des enfants, si J0 joue alors on prends min du score des enfants
-RECURSION !!!!!*/
-fn minimax(noeud: &mut Noeud) {
-    if noeud.enfants.is_empty() {
-        // Si on est sur une feuille => condition d'arrêt
-        return;
-    }
-
-    for enfant in &mut noeud.enfants {
-        // On calcule le minmax de chaque enfant
-        minimax(enfant);
-    }
-    if noeud.joueur == 0 {
-        // On prend le score maximum des enfants
-        let mut max = -2; //pire cas
-        for enfant in &mut noeud.enfants {
-            //boucle simple pour trouver max
-            if enfant.score > max {
-                max = enfant.score;
+                if noeud.score < alpha || noeud.score > beta {
+                    //élagage
+                    return;
+                }
             }
         }
-        noeud.score = max; //lui donner max
-    } else {
-        // On prend le score minimum des enfants
-        let mut min = 2; //meilleur cas
-        for enfant in &mut noeud.enfants {
-            //boucle simple pour trouver min
-            if enfant.score < min {
-                min = enfant.score;
-            }
-        }
-        noeud.score = min; //lui donner min
     }
 }
