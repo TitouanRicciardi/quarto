@@ -1,5 +1,10 @@
 use quarto_core::{Board, Game, Piece, Stack};
-use quarto_players::{Player, minimax::MinimaxBot, random::RandomBot};
+use quarto_players::{
+    Player,
+    // minimax::MinimaxBot,
+    minimax_alpha_beta::MinimaxAlphaBetaPlayer,
+    random::RandomBot
+};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -21,7 +26,7 @@ impl QuartoEngine {
             },
             players: [
                 Box::new(RandomBot::default()),
-                Box::new(MinimaxBot::default()),
+                Box::new(MinimaxAlphaBetaPlayer {}),
             ],
             current_player: 0,
             winner: None,
